@@ -31,7 +31,7 @@ function PowerLS {
 
     # get the longest string and get the length
     $lnStr = $childs | select-object Name | sort-object { "$_".length } -descending | select-object -first 1
-    $len = $lnStr.name.length
+    $len = $lnStr.name.length + 1
 
     # keep track of how long our line is so far
     $count = 0
@@ -42,22 +42,22 @@ function PowerLS {
     # for every element, print the line
     foreach ($e in $childs) {
 
-      $newName = $e.name + (" "*($len - $e.name.length+$breather))
+      $padding = (" "*($len - $e.name.length+$breather))
       $count += $newName.length
 
       # determine color we should be printing
       # Blue for folders, Green for files, and Gray for hidden files
       if (Test-Path ($redirect + "\" + $e) -pathtype container) { #folders
-        write-host $newName -nonewline -foregroundcolor blue
+        write-host "$($e.name)/$padding" -nonewline -foregroundcolor blue
       }
-      elseif ($newName -match "^\..*$") { #hidden files
-        write-host $newName -nonewline -foregroundcolor darkgray
+      elseif ($e.name -match "^\..*$") { #hidden files
+        write-host "$($e.name)!$padding" -nonewline -foregroundcolor darkgray
       }
-      elseif ($newName -match "\.[^\.]*") { #normal files
-        write-host $newName -nonewline -foregroundcolor green
+      elseif ($e.name -match "\.[^\.]*") { #normal files
+        write-host "$($e.name) $padding" -nonewline -foregroundcolor green
       }
       else { #others...
-        write-host $newName -nonewline -foregroundcolor white
+        write-host "$($e.name) $padding" -nonewline -foregroundcolor white
       }
 
       if ( $count -ge ($bufferwidth - ($len+$breather)) ) {
