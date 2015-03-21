@@ -23,52 +23,44 @@ function PowerLS {
   )
 
     # get the console buffersize
-    $buffer = Get-Host
-    $bufferwidth = $buffer.ui.rawui.buffersize.width
+    $BufferWidth = (Get-Host).ui.rawui.buffersize.width
 
     # get all the files and folders
-    $childs = Get-ChildItem $redirect
+    $Childs = @(Get-ChildItem $redirect)
 
     # get the longest string and get the length
-    $lnStr = $childs | select-object Name | sort-object { "$_".length } -descending | select-object -first 1
-    $len = $lnStr.name.length + 1
+    $LargestLength = ($Childs | % { $_.Name.Length } | Measure-Object -Maximum).Maximum
 
     # keep track of how long our line is so far
-    $count = 0
-
-    # extra space to give some breather space
-    $breather = 4
+    $CurrentColumn = 0
 
     # for every element, print the line
-    foreach ($e in $childs) {
-
-      $padding = (" "*($len - $e.name.length+$breather))
-      $count += $newName.length
+    foreach ($e in $Childs) {
+      $Name = $e.Name
 
       # determine color we should be printing
       # Blue for folders, Green for files, and Gray for hidden files
-      if (Test-Path ($redirect + "\" + $e) -pathtype container) { #folders
-        write-host "$($e.name)/$padding" -nonewline -foregroundcolor blue
+      if ($e.PSIsContainer) { #folders
+        write-host "$Name/  " -nonewline -foregroundcolor blue
+      } elseif ($Name -match "^\..*$") { #hidden files
+        write-host "($Name) " -nonewline -foregroundcolor darkgray
+      } elseif ($Name -match "\.[^\.]*") { #normal files
+        write-host "$Name   " -nonewline -foregroundcolor green
+      } else { #others...
+        write-host "$Name   " -nonewline -foregroundcolor white
       }
-      elseif ($e.name -match "^\..*$") { #hidden files
-        write-host "$($e.name)!$padding" -nonewline -foregroundcolor darkgray
-      }
-      elseif ($e.name -match "\.[^\.]*") { #normal files
-        write-host "$($e.name) $padding" -nonewline -foregroundcolor green
-      }
-      else { #others...
-        write-host "$($e.name) $padding" -nonewline -foregroundcolor white
-      }
+      $CurrentColumn += $LargestLength + 3
 
-      if ( $count -ge ($bufferwidth - ($len+$breather)) ) {
+      if ( $CurrentColumn + $LargestLength + 3 -ge $BufferWidth ) {
         write-host ""
-        $count = 0
+        $CurrentColumn = 0
+      } else {
+        write-host -nonewline (" " * ($LargestLength - $Name.length))
       }
-
     }
-
-    write-host "" # add newline at bottom
-
+    if ($CurrentColumn -ne 0) {
+        write-host "" # add newline at bottom
+    }
 }
 
 export-modulemember -function PowerLS
