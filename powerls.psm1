@@ -21,7 +21,6 @@ function PowerLS {
   param(
     $redirect = "."
   )
-    write-host "" # add newline at top
 
     # get the console buffersize
     $buffer = Get-Host
@@ -68,7 +67,6 @@ function PowerLS {
 
     }
 
-    write-host "" # add newline at bottom
     write-host "" # add newline at bottom
 
 }
